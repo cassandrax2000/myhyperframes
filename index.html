@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #EAE7DF;
+      font-family: "Figtree", sans-serif;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+    }
+
+    /* ── Background ── */
+    .bg {
+      position: absolute;
+      inset: 0;
+      background: #EAE7DF;
+    }
+
+    .bg-glow {
+      position: absolute;
+      width: 960px;
+      height: 960px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(197,203,170,0.42) 0%, rgba(197,203,170,0) 68%);
+      pointer-events: none;
+      data-layout-ignore: true;
+    }
+
+    /* ── Caption below phone ── */
+    .caption-row {
+      position: absolute;
+      bottom: 52px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .caption {
+      font-family: "Figtree", sans-serif;
+      font-size: 24px;
+      font-weight: 500;
+      color: #7A806A;
+      letter-spacing: 0.01em;
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    /* ── Phone wrap ── */
+    .phone-wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 416px;
+      height: 852px;
+    }
+
+    .phone-frame {
+      position: absolute;
+      inset: 0;
+      background: #1A1A1A;
+      border-radius: 54px;
+      box-shadow:
+        0 0 0 1.5px #3A3A3C,
+        inset 0 0 0 1px #2C2C2E,
+        0 48px 96px rgba(0,0,0,0.38),
+        0 12px 24px rgba(0,0,0,0.18);
+    }
+
+    /* side buttons */
+    .btn { position: absolute; background: #2A2A2C; border-radius: 2px; }
+    .btn-silent   { left:-4px; top:148px; width:4px; height:34px; }
+    .btn-vol-up   { left:-4px; top:200px; width:4px; height:68px; }
+    .btn-vol-dn   { left:-4px; top:282px; width:4px; height:68px; }
+    .btn-power    { right:-4px; top:210px; width:4px; height:88px; }
+
+    /* ── Screen viewport ── */
+    .screen-vp {
+      position: absolute;
+      top: 14px; left: 14px; right: 14px; bottom: 14px;
+      border-radius: 42px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* Dynamic island */
+    .dyn-island {
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 112px;
+      height: 34px;
+      background: #1A1A1A;
+      border-radius: 17px;
+      z-index: 20;
+    }
+
+    /* ── Screen track ── */
+    .screen-track {
+      display: flex;
+      width: calc(388px * 3);
+      height: 100%;
+      will-change: transform;
+    }
+
+    .app-screen {
+      width: 388px;
+      height: 100%;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       SCREEN 1 — Splash
+    ════════════════════════════════════════ */
+    #s1 {
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 28px 40px;
+      gap: 0;
+    }
+
+    .s1-paw {
+      margin-bottom: 18px;
+    }
+
+    .s1-brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      color: #1A1A1A;
+      margin-bottom: 10px;
+    }
+
+    .s1-tagline {
+      font-size: 14px;
+      font-weight: 400;
+      color: #9A9A8A;
+      margin-bottom: 64px;
+    }
+
+    .s1-cards {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .s1-card {
+      background: #C5CBAA;
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .s1-icon-wrap {
+      width: 46px; height: 46px;
+      background: white;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .s1-card-text h3 { font-size: 15px; font-weight: 700; color: #1A1A1A; margin-bottom: 2px; }
+    .s1-card-text p  { font-size: 12px; font-weight: 400; color: #4A4A3A; }
+
+    .s1-chevron { margin-left: auto; color: #4A4A3A; font-size: 18px; font-weight: 300; }
+
+    .s1-login { font-size: 12px; color: #9A9A8A; }
+    .s1-login span { font-weight: 600; color: #5A5A4A; }
+
+    /* ════════════════════════════════════════
+       SCREENS 2 & 3 — Onboarding
+    ════════════════════════════════════════ */
+    #s2, #s3 {
+      background: #EAE7DF;
+      display: flex;
+      flex-direction: column;
+      padding: 62px 22px 28px;
+    }
+
+    .prog-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: rgba(26,26,26,0.12);
+    }
+    .prog-fill {
+      height: 100%;
+      background: #1A1A1A;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .ob-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .ob-back {
+      font-size: 22px;
+      color: #1A1A1A;
+      line-height: 1;
+      font-weight: 300;
+    }
+    .ob-step {
+      font-size: 12px;
+      font-weight: 500;
+      color: #7A806A;
+    }
+
+    .ob-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1A1A1A;
+      line-height: 1.22;
+      margin-bottom: 6px;
+    }
+    .ob-sub {
+      font-size: 13px;
+      font-weight: 400;
+      color: #9A9A8A;
+      margin-bottom: 22px;
+    }
+
+    .opt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .opt-card {
+      background: white;
+      border-radius: 16px;
+      padding: 13px 15px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      border: 2px solid transparent;
+    }
+    .opt-card.sel {
+      border-color: #1A1A1A;
+      background: rgba(255,255,255,0.72);
+    }
+
+    .opt-icon {
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      background: #EFEFEB;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .opt-icon.pink { background: #FCE8E8; }
+    .opt-icon.amber { background: #FFF0DC; }
+    .opt-icon.indigo { background: #ECEEFF; }
+
+    .opt-text h4 { font-size: 14px; font-weight: 700; color: #1A1A1A; margin-bottom: 2px; }
+    .opt-text p  { font-size: 11px; font-weight: 400; color: #9A9A8A; }
+
+    .opt-check {
+      margin-left: auto;
+      width: 24px; height: 24px;
+      background: #1A1A1A;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .cont-btn {
+      background: #1A1A1A;
+      color: white;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 18px;
+      letter-spacing: 0.01em;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"
+       data-composition-id="snoutswipe"
+       data-width="1920"
+       data-height="1080"
+       data-start="0"
+       data-duration="10">
+
+    <div class="bg"></div>
+    <div class="bg-glow" id="bgGlow" data-layout-ignore></div>
+
+    <!-- ── Phone ── -->
+    <div class="phone-wrap" id="phoneWrap">
+      <div class="phone-frame">
+        <div class="btn btn-silent"></div>
+        <div class="btn btn-vol-up"></div>
+        <div class="btn btn-vol-dn"></div>
+        <div class="btn btn-power"></div>
+      </div>
+
+      <div class="screen-vp">
+        <div class="dyn-island"></div>
+
+        <div class="screen-track" id="screenTrack" data-layout-allow-overflow>
+
+          <!-- ── Screen 1: Splash ── -->
+          <div class="app-screen" id="s1">
+            <div class="s1-paw">
+              <svg viewBox="0 0 200 220" width="96" height="106" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="38"  cy="58"  rx="23" ry="30" fill="#C5CBAA" stroke="#1A1A1A" stroke-width="6" transform="rotate(-20,38,58)"/>
+                <ellipse cx="80"  cy="32"  rx="23" ry="30" fill="#C5CBAA" stroke="#1A1A1A" stroke-width="6" transform="rotate(-5,80,32)"/>
+                <ellipse cx="120" cy="32"  rx="23" ry="30" fill="#C5CBAA" stroke="#1A1A1A" stroke-width="6" transform="rotate(5,120,32)"/>
+                <ellipse cx="162" cy="58"  rx="23" ry="30" fill="#C5CBAA" stroke="#1A1A1A" stroke-width="6" transform="rotate(20,162,58)"/>
+                <ellipse cx="100" cy="157" rx="73" ry="62" fill="#C5CBAA" stroke="#1A1A1A" stroke-width="6"/>
+                <path d="M100,197 C73,178 57,158 57,143 C57,131 65,123 77,123 C84,123 92,128 100,136 C108,128 116,123 123,123 C135,123 143,131 143,143 C143,158 127,178 100,197Z"
+                      fill="white" stroke="#1A1A1A" stroke-width="4"/>
+              </svg>
+            </div>
+            <div class="s1-brand">SNOUTSWIPE</div>
+            <div class="s1-tagline">Find your perfect furry companion</div>
+
+            <div class="s1-cards" id="s1Cards">
+              <div class="s1-card" id="s1Card1">
+                <div class="s1-icon-wrap">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </div>
+                <div class="s1-card-text">
+                  <h3>Pet Adopter</h3>
+                  <p>Looking for a new best friend</p>
+                </div>
+                <div class="s1-chevron">›</div>
+              </div>
+
+              <div class="s1-card" id="s1Card2">
+                <div class="s1-icon-wrap">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <div class="s1-card-text">
+                  <h3>Shelter</h3>
+                  <p>Manage your animals</p>
+                </div>
+                <div class="s1-chevron">›</div>
+              </div>
+            </div>
+
+            <div class="s1-login">Already have an account? <span>Log in</span></div>
+          </div>
+
+          <!-- ── Screen 2: Pet Type (1 of 4) ── -->
+          <div class="app-screen" id="s2">
+            <div class="prog-bar"><div class="prog-fill" style="width:25%"></div></div>
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-step">1 of 4</div>
+            </div>
+            <div class="ob-title" id="s2Title">What kind of pet are you interested in?</div>
+            <div class="ob-sub" id="s2Sub">Choose one</div>
+            <div class="opt-list" id="s2List">
+              <div class="opt-card" id="s2o1">
+                <div class="opt-icon">🐶</div>
+                <div class="opt-text"><h4>Dogs</h4><p>Loyal companions</p></div>
+              </div>
+              <div class="opt-card" id="s2o2">
+                <div class="opt-icon">🐱</div>
+                <div class="opt-text"><h4>Cats</h4><p>Independent spirits</p></div>
+              </div>
+              <div class="opt-card sel" id="s2o3">
+                <div class="opt-icon pink">🐾</div>
+                <div class="opt-text"><h4>Both</h4><p>Show me everything</p></div>
+                <div class="opt-check">✓</div>
+              </div>
+            </div>
+            <div class="cont-btn" id="s2Btn">Continue →</div>
+          </div>
+
+          <!-- ── Screen 3: Personality (2 of 4) ── -->
+          <div class="app-screen" id="s3">
+            <div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div>
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-step">2 of 4</div>
+            </div>
+            <div class="ob-title" id="s3Title">What personality are you looking for?</div>
+            <div class="ob-sub" id="s3Sub">Select all that apply</div>
+            <div class="opt-list" id="s3List">
+              <div class="opt-card" id="s3o1">
+                <div class="opt-icon amber">⚡</div>
+                <div class="opt-text"><h4>Energetic</h4><p>Active and playful</p></div>
+              </div>
+              <div class="opt-card" id="s3o2">
+                <div class="opt-icon indigo">🌙</div>
+                <div class="opt-text"><h4>Calm</h4><p>Relaxed and peaceful</p></div>
+              </div>
+              <div class="opt-card" id="s3o3">
+                <div class="opt-icon">👥</div>
+                <div class="opt-text"><h4>Family Friendly</h4><p>Great with kids</p></div>
+              </div>
+            </div>
+            <div class="cont-btn" id="s3Btn">Continue →</div>
+          </div>
+
+        </div><!-- /screen-track -->
+      </div><!-- /screen-vp -->
+    </div><!-- /phone-wrap -->
+
+    <!-- ── Captions ── -->
+    <div class="caption-row">
+      <div class="caption" id="cap1">Find your perfect furry companion</div>
+      <div class="caption" id="cap2">Choose your ideal pet type</div>
+      <div class="caption" id="cap3">Match your lifestyle to a personality</div>
+    </div>
+
+  </div><!-- /root -->
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    var tl = gsap.timeline({ paused: true });
+
+    var SW = 388; // screen width (each panel)
+
+    // ── Background glow: fade in then breathe ──
+    // Fade in with phone
+    tl.from('#bgGlow', { scale: 0.88, opacity: 0, duration: 0.9, ease: 'power2.out' }, 0.1);
+    // Breathing pulse: 1.8s per half-cycle, 5 yoyo repeats → 6 half-cycles × 1.8s = 10.8s (covers full duration)
+    tl.to('#bgGlow', { scale: 1.13, duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: 5 }, 1.0);
+
+    // ── Phone entrance ──
+    tl.from('#phoneWrap', { y: 70, opacity: 0, scale: 0.96, duration: 0.75, ease: 'power3.out' }, 0.1);
+
+    // ── Screen 1 content entrances ──
+    tl.from('.s1-paw',    { y: 28, opacity: 0, duration: 0.55, ease: 'power2.out' }, 0.55);
+    tl.from('.s1-brand',  { y: 18, opacity: 0, duration: 0.45, ease: 'expo.out'   }, 0.72);
+    tl.from('.s1-tagline',{ opacity: 0,         duration: 0.4,  ease: 'power1.out' }, 0.88);
+    tl.from('#s1Card1',   { y: 20, opacity: 0, duration: 0.42, ease: 'power3.out' }, 1.02);
+    tl.from('#s1Card2',   { y: 20, opacity: 0, duration: 0.42, ease: 'power3.out' }, 1.16);
+    tl.from('.s1-login',  { opacity: 0,         duration: 0.35, ease: 'power1.out' }, 1.34);
+
+    // Caption 1
+    tl.from('#cap1', { y: 12, opacity: 0, duration: 0.5, ease: 'power2.out' }, 0.65);
+
+    // ── Transition 1: push-left at t=3.2 (Screen 1 → Screen 2) ──
+    var T1 = 3.2;
+    tl.to('#screenTrack', { x: -SW, duration: 0.48, ease: 'power3.inOut' }, T1);
+
+    // Caption swap
+    tl.to('#cap1', { opacity: 0, y: -8, duration: 0.22, ease: 'power1.in', overwrite: 'auto' }, T1);
+    tl.from('#cap2', { y: 12, opacity: 0, duration: 0.42, ease: 'power2.out' }, T1 + 0.38);
+
+    // Screen 2 content entrances
+    tl.from('#s2Title', { x: 22, opacity: 0, duration: 0.48, ease: 'power3.out' }, T1 + 0.52);
+    tl.from('#s2Sub',   { x: 14, opacity: 0, duration: 0.38, ease: 'power2.out' }, T1 + 0.66);
+    tl.from('#s2o1',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T1 + 0.76);
+    tl.from('#s2o2',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T1 + 0.90);
+    tl.from('#s2o3',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T1 + 1.04);
+    tl.from('#s2Btn',   { y: 10, opacity: 0, duration: 0.32, ease: 'sine.out'   }, T1 + 1.22);
+
+    // ── Transition 2: push-left at t=6.5 (Screen 2 → Screen 3) ──
+    var T2 = 6.5;
+    tl.to('#screenTrack', { x: -SW * 2, duration: 0.48, ease: 'power3.inOut' }, T2);
+
+    // Caption swap
+    tl.to('#cap2', { opacity: 0, y: -8, duration: 0.22, ease: 'power1.in', overwrite: 'auto' }, T2);
+    tl.from('#cap3', { y: 12, opacity: 0, duration: 0.42, ease: 'power2.out' }, T2 + 0.38);
+
+    // Screen 3 content entrances
+    tl.from('#s3Title', { x: 22, opacity: 0, duration: 0.48, ease: 'power3.out' }, T2 + 0.52);
+    tl.from('#s3Sub',   { x: 14, opacity: 0, duration: 0.38, ease: 'power2.out' }, T2 + 0.66);
+    tl.from('#s3o1',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T2 + 0.76);
+    tl.from('#s3o2',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T2 + 0.90);
+    tl.from('#s3o3',    { y: 16, opacity: 0, duration: 0.38, ease: 'expo.out'   }, T2 + 1.04);
+    tl.from('#s3Btn',   { y: 10, opacity: 0, duration: 0.32, ease: 'sine.out'   }, T2 + 1.22);
+
+    // ── Final fade out ──
+    tl.to('#phoneWrap', { opacity: 0, scale: 0.97, duration: 0.5, ease: 'power2.in' }, 9.5);
+    tl.to('#bgGlow',    { opacity: 0,              duration: 0.5, ease: 'power1.in' }, 9.5);
+    tl.to('#cap3',      { opacity: 0,              duration: 0.4, ease: 'power1.in' }, 9.55);
+
+    window.__timelines['snoutswipe'] = tl;
+  </script>
+</body>
+</html>
